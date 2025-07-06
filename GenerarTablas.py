@@ -52,7 +52,7 @@ def ruta(path, path2):
         print(f"| {' | '.join(map(str, fila))} |")
         
     print("\nTabla 1: Distribución de etiquetas en los conjuntos de entrenamiento y prueba.")
-def generate_category_distribution(task2_ruta):
+def generar_distribucion_de_categorias(task2_ruta):
     task1_ruta = task2_ruta.replace("task2", "task1")
     usuario = {}
     
@@ -102,7 +102,7 @@ def generate_category_distribution(task2_ruta):
     print("\nTabla 2: Distribución de etiquetas en la tarea 2.")
 
 
-def generate_classes_per_user_distribution(task2_ruta):
+def generar_clases_por_riesgo(task2_ruta):
     task1_ruta = task2_ruta.replace("task2", "task1")
     usr_riesgo = {}
     
@@ -287,7 +287,7 @@ def generar_diagramas_bigotes_tokens(ruta_etiquetas, carpeta_json):
     for box in bp1['boxes']:
         box.set(facecolor='#4682B4', alpha=0.7)  
     
-    ax1.set_xetiqueta('Number of tokens', fontsize=12)
+    ax1.set_xlabel('Number of tokens', fontsize=12)
     ax1.set_yticks([])  
     
     plt.tight_layout()
@@ -325,10 +325,10 @@ def generar_diagramas_bigotes_tokens(ruta_etiquetas, carpeta_json):
           f"Mediana: {np.median(longitud_mensajes_por_usuario):.2f}, "
           f"Desviación estándar: {np.std(longitud_mensajes_por_usuario):.2f}")
     
-def generar_diagramas_bigotes_mensajes(carpeta_json):
+def generar_diagramas_bigotes_mensajes(ruta_etiquetas, carpeta_json):
     """
-    Genera un diagrama de bigotes horizontal para la distribución de mensajes por usuario,
-    con la caja en azul claro y la mediana en rojo
+    Genera un diagrama de bigotes horizontal comparando la distribución de mensajes 
+    por usuario entre grupos de bajo y alto riesgo
     """
     def contar_mensajes(archivo):
         """cuenta el número de mensajes en un archivo JSON"""
@@ -349,72 +349,115 @@ def generar_diagramas_bigotes_mensajes(carpeta_json):
             print(f"Error procesando {archivo}: {str(e)}")
             return 0
 
-    if not os.path.exists(carpeta_json):
-        raise FileNotFoundError(f"La carpeta no existe: {carpeta_json}")
+    # Cargar etiquetas de riesgo
+    etiquetas_usuarios = {}
+    if os.path.exists(ruta_etiquetas):
+        with open(ruta_etiquetas, 'r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            for fila in reader:
+                if len(fila) >= 2 and fila[1] in ['0', '1']:
+                    etiquetas_usuarios[fila[0]] = 'Bajo riesgo' if fila[1] == '0' else 'Alto riesgo'
 
     archivos = [os.path.join(carpeta_json, f) for f in os.listdir(carpeta_json) 
                 if f.endswith('.json')]
-    print(f"Archivos encontrados: {len(archivos)}")
     
-    if not archivos:
-        print(f"Archivos en la carpeta: {os.listdir(carpeta_json)}")
-        raise ValueError("No se encontraron archivos .json")
-
-    datos = []
+    datos_bajo_riesgo = []
+    datos_alto_riesgo = []
+    
     for archivo in archivos:
         usuario = os.path.splitext(os.path.basename(archivo))[0]
         mensajes = contar_mensajes(archivo)
-        datos.append({'usuario': usuario, 'mensajes': mensajes})
-    
-    df = pd.DataFrame(datos)
+        
+        if usuario in etiquetas_usuarios:
+            if etiquetas_usuarios[usuario] == 'Bajo riesgo':
+                datos_bajo_riesgo.append(mensajes)
+            else:
+                datos_alto_riesgo.append(mensajes)
 
-    if df.empty or df['mensajes'].sum() == 0:
-        print("No se encontraron mensajes en los archivos")
-        return
 
     sns.set_style("whitegrid")
-    plt.rcParams['figure.facecolor'] = '#f8f9fa'
-    plt.rcParams['axes.facecolor'] = 'white'
+    plt.rcParams['figure.facecolor'] = 'white'
     
-    fig = plt.figure(figsize=(10, 6), facecolor='none')
-    ax = fig.add_subplot(111)
+    fig, ax = plt.subplots(figsize=(12, 8))
 
+    datos_para_plot = []
+    etiquetas_para_plot = []
+    
+    if datos_bajo_riesgo:
+        datos_para_plot.append(datos_bajo_riesgo)
+        etiquetas_para_plot.append(f'Bajo riesgo (n={len(datos_bajo_riesgo)})')
+    
+    if datos_alto_riesgo:
+        datos_para_plot.append(datos_alto_riesgo)
+        etiquetas_para_plot.append(f'Alto riesgo (n={len(datos_alto_riesgo)})')
 
-    boxprops = {
-        'facecolor': "#CC5850",  
-        'edgecolor': "#691512",
-        'alpha': 0.7,
-        'linewidth': 0.8
-    }
-    medianprops = {
-        'color': 'red',  
-        'linewidth': 1.5
-    }
-
-    ax.boxplot(
-        df['mensajes'],
-        vert=False,
+    bp = ax.boxplot(
+        datos_para_plot,
+        vert=False,  
         patch_artist=True,
-        showfliers=False,
-        boxprops=boxprops,
-        medianprops=medianprops,
-        whiskerprops={'color': '#1e3f66', 'linewidth': 0.8},
-        capprops={'color': '#1e3f66', 'linewidth': 0.8},
+        showfliers=True,
+        labels=etiquetas_para_plot
     )
 
-    ax.set_yticks([]) 
+    colors = ['#6AB187', '#CC5850'] 
+    for patch, color in zip(bp['boxes'], colors[:len(bp['boxes'])]):
+        patch.set_facecolor(color)
+        patch.set_alpha(0.7)
+        patch.set_edgecolor('#2c3e50')
+        patch.set_linewidth(0.8)
+
+    for median in bp['medians']:
+        median.set_color('red')
+        median.set_linewidth(1.5)
+
+    for whisker in bp['whiskers']:
+        whisker.set_color('#2c3e50')
+        whisker.set_linewidth(0.8)
+    
+    for cap in bp['caps']:
+        cap.set_color('#2c3e50')
+        cap.set_linewidth(0.8)
+
+    for flier in bp['fliers']:
+        flier.set_marker('o')
+        flier.set_markerfacecolor('#1E88E5')
+        flier.set_markersize(4)
+        flier.set_alpha(0.6)
+
+    ax.set_xlabel('Número de mensajes por usuario', fontsize=14, fontweight='bold') 
+    ax.set_ylabel('Grupo de riesgo', fontsize=14, fontweight='bold') 
+    ax.tick_params(axis='both', labelsize=12)
+    
+    ax.grid(True, alpha=0.7)
     
     plt.tight_layout()
+    
     directorio_salida = "./graficos"
     if not os.path.exists(directorio_salida):
         os.makedirs(directorio_salida)
     
-    ruta_salida = os.path.join(directorio_salida, "msg_usuarios.png")
+    ruta_salida = os.path.join(directorio_salida, "comparacion_mensajes_usuarios_horizontal.png")
     plt.savefig(ruta_salida, dpi=300, bbox_inches='tight', transparent=True)
     plt.close()
     
     print(f"\nDiagrama guardado en: {ruta_salida}")
-
+    print("\n=== ESTADÍSTICAS DE MENSAJES POR USUARIO ===")
+    
+    if datos_bajo_riesgo:
+        print(f"\nBajo riesgo ({len(datos_bajo_riesgo)} usuarios):")
+        print(f"  Media: {np.mean(datos_bajo_riesgo):.2f}")
+        print(f"  Mediana: {np.median(datos_bajo_riesgo):.2f}")
+        print(f"  Desviación estándar: {np.std(datos_bajo_riesgo):.2f}")
+        print(f"  Mínimo: {np.min(datos_bajo_riesgo)}")
+        print(f"  Máximo: {np.max(datos_bajo_riesgo)}")
+    
+    if datos_alto_riesgo:
+        print(f"\nAlto riesgo ({len(datos_alto_riesgo)} usuarios):")
+        print(f"  Media: {np.mean(datos_alto_riesgo):.2f}")
+        print(f"  Mediana: {np.median(datos_alto_riesgo):.2f}")
+        print(f"  Desviación estándar: {np.std(datos_alto_riesgo):.2f}")
+        print(f"  Mínimo: {np.min(datos_alto_riesgo)}")
+        print(f"  Máximo: {np.max(datos_alto_riesgo)}")
 
 def generar_diagrama_actividad_3h_balanceado(carpeta_json, ruta_etiquetas=None):
     """
@@ -527,10 +570,10 @@ def generar_diagrama_actividad_3h_balanceado(carpeta_json, ruta_etiquetas=None):
     bars = ax.bar(range(len(tramos_ordenados)), valores_actividad, 
                   color='#4682B4', alpha=0.7, edgecolor='#1e3f66', linewidth=0.8)
     
-    ax.set_xetiqueta('Tramos horarios (3 horas)', fontsize=12, fontweight='bold')
-    ax.set_yetiqueta('Número de mensajes', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Tramos horarios (3 horas)', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Número de mensajes', fontsize=12, fontweight='bold')
     ax.set_xticks(range(len(tramos_ordenados)))
-    ax.set_xticketiquetas(tramos_ordenados, rotation=45, ha='right')
+    ax.set_xticklabels(tramos_ordenados, rotation=45, ha='right')
     
     for bar, valor in zip(bars, valores_actividad):
         if valor > 0:
@@ -539,7 +582,7 @@ def generar_diagrama_actividad_3h_balanceado(carpeta_json, ruta_etiquetas=None):
     
     promedio = np.mean(valores_actividad)
     ax.axhline(y=promedio, color='red', linestyle='--', alpha=0.7, 
-               etiqueta=f'Promedio: {promedio:.0f} mensajes')
+               label=f'Promedio: {promedio:.0f} mensajes')
     ax.legend()
     
     plt.tight_layout()
@@ -560,14 +603,14 @@ def generar_diagrama_actividad_3h_balanceado(carpeta_json, ruta_etiquetas=None):
             valores_grupo = [actividad_por_grupo[grupo].get(tramo, 0) for tramo in tramos_ordenados]
             ost = (i - len(grupos)/2 + 0.5) * width
             ax1.bar(x + ost, valores_grupo, width, 
-                   etiqueta=f'{grupo} (n={usuarios_por_grupo[grupo]})', 
+                   label=f'{grupo} (n={usuarios_por_grupo[grupo]})', 
                    color=colors[grupo], alpha=0.7)
         
-        ax1.set_xetiqueta('Tramos horarios (3 horas)', fontsize=12, fontweight='bold')
-        ax1.set_yetiqueta('Número de mensajes (total)', fontsize=12, fontweight='bold')
+        ax1.set_xlabel('Tramos horarios (3 horas)', fontsize=12, fontweight='bold')
+        ax1.set_ylabel('Número de mensajes (total)', fontsize=12, fontweight='bold')
         ax1.set_title('Comparación Absoluta por Grupos', fontsize=14, fontweight='bold')
         ax1.set_xticks(x)
-        ax1.set_xticketiquetas(tramos_ordenados, rotation=45, ha='right')
+        ax1.set_xticklabels(tramos_ordenados, rotation=45, ha='right')
         ax1.legend()
         
         for i, grupo in enumerate(grupos):
@@ -580,14 +623,14 @@ def generar_diagrama_actividad_3h_balanceado(carpeta_json, ruta_etiquetas=None):
             
             ost = (i - len(grupos)/2 + 0.5) * width
             ax2.bar(x + ost, valores_normalizados, width, 
-                   etiqueta=f'{grupo} (promedio por usuario)', 
+                   label=f'{grupo} (promedio por usuario)', 
                    color=colors[grupo], alpha=0.7)
         
-        ax2.set_xetiqueta('Tramos horarios (3 horas)', fontsize=18, fontweight='bold')
-        ax2.set_yetiqueta('Mensajes promedio por usuario', fontsize=18, fontweight='bold')
+        ax2.set_xlabel('Tramos horarios (3 horas)', fontsize=18, fontweight='bold')
+        ax2.set_ylabel('Mensajes promedio por usuario', fontsize=18, fontweight='bold')
         ax2.set_title('Comparación Normalizada por Usuario', fontsize=18, fontweight='bold')
         ax2.set_xticks(x)
-        ax2.set_xticketiquetas(tramos_ordenados, rotation=45, ha='right')
+        ax2.set_xticklabels(tramos_ordenados, rotation=45, ha='right')
         ax2.legend()
         
         plt.tight_layout()
@@ -605,20 +648,20 @@ def generar_diagrama_actividad_3h_balanceado(carpeta_json, ruta_etiquetas=None):
                 porcentajes = [(v / total_grupo) * 100 for v in valores_grupo]
                 ost = (i - len(grupos)/2 + 0.5) * width
                 ax.bar(x + ost, porcentajes, width, 
-                      etiqueta=f'{grupo} (% del total del grupo)', 
+                      label=f'{grupo} (% del total del grupo)', 
                       color=colors[grupo], alpha=0.7)
         
-        ax.set_xetiqueta('Tramos horarios (3 horas)', fontsize=18, fontweight='bold')
-        ax.set_yetiqueta('Porcentaje de mensajes del grupo (%)', fontsize=18, fontweight='bold')
+        ax.set_xlabel('Tramos horarios (3 horas)', fontsize=18, fontweight='bold')
+        ax.set_ylabel('Porcentaje de mensajes del grupo (%)', fontsize=18, fontweight='bold')
         ax.set_xticks(x)
-        ax.set_xticketiquetas(tramos_ordenados, rotation=45, ha='right')
+        ax.set_xticklabels(tramos_ordenados, rotation=45, ha='right')
         ax.legend(prop={'size': 14})
-        ax.tick_params(axis='x', etiquetasize=14)
-        ax.tick_params(axis='y', etiquetasize=14)
-        ax.xaxis.etiqueta.set_fontsize(14)
-        ax.yaxis.etiqueta.set_fontsize(14)
-        ax.tick_params(axis='x', etiquetasize=18)
-        ax.tick_params(axis='y', etiquetasize=18)
+        ax.tick_params(axis='x', labelsize=14)
+        ax.tick_params(axis='y', labelsize=14)
+        ax.xaxis.label.set_fontsize(14)
+        ax.yaxis.label.set_fontsize(14)
+        ax.tick_params(axis='x', labelsize=18)
+        ax.tick_params(axis='y', labelsize=18)
         
         plt.tight_layout()
         plt.savefig(os.path.join(directorio_salida, 'actividad_por_tramos_3h_porcentual.png'), 
@@ -674,10 +717,14 @@ def generar_diagrama_actividad_3h_balanceado(carpeta_json, ruta_etiquetas=None):
                     print(f"  Ratio (Alto/Bajo): {ratio:.2f}x")
 
 
-generar_diagrama_actividad_3h_balanceado(
+"""generar_diagrama_actividad_3h_balanceado(
     "./MentalRisk2025/task1/train/subjects",
     "./MentalRisk2025/task1/train/gold_task1.txt"
-)
+)"""
+
+
+generar_diagramas_bigotes_mensajes("./MentalRisk2025 - original/task1/train/gold_task1.txt", 
+                                   "./MentalRisk2025 - original/task1/train/subjects")
 
 
 """
@@ -686,22 +733,22 @@ generar_diagramas_bigotes_tokens("./MentalRisk2025 - original/task1/train/gold_t
                                    "./MentalRisk2025 - original/task1/train/subjects")
 
 ruta("./Datos originales sin augmentation/task1/train/gold_task1.txt", "./Datos originales sin augmentation/task1/trial/gold_task1.txt")
-generate_category_distribution("./MentalRisk2025 - original/task2/train/gold_task2.txt")
-generate_classes_per_user_distribution("./MentalRisk2025 - original/task2/train/gold_task2.txt")
+generar_distribución("./MentalRisk2025 - original/task2/train/gold_task2.txt")
+generar_clases_por_riesgo("./MentalRisk2025 - original/task2/train/gold_task2.txt")
 generar_tabla_distribucion_plataformas("./MentalRisk2025 - original/task1/train/gold_task1.txt","./MentalRisk2025 - original/task1/train/subjects")
 generar_diagramas_bigotes_mensajes("./MentalRisk2025 - 0/task1/train/subjects")"""
 """ Para test 
 generar_diagramas_bigotes_tokens("./Datos originales sin augmentation/task2/test/test/gold_task2.txt", 
                                    "./Datos originales sin augmentation/task2/test/test/subject")
 ruta("./Datos originales sin augmentation/task1/test/test/gold_task1.txt", "./Datos originales sin augmentation/task2/test/test/gold_task2.txt")
-generate_category_distribution("./Datos originales sin augmentation/task2/test/test/gold_task2.txt")
-generate_classes_per_user_distribution("./Datos originales sin augmentation/task2/test/test/gold_task2.txt")
+generar_distribución("./Datos originales sin augmentation/task2/test/test/gold_task2.txt")
+generar_clases_por_riesgo("./Datos originales sin augmentation/task2/test/test/gold_task2.txt")
 #generar_tabla_distribucion_plataformas("./MentalRisk2025 - original/task1/train/gold_task1.txt","./MentalRisk2025 - original/task1/train/subjects")"""
 
 
 
 """ruta("./MentalRisk2024/Train/Gold/gold_a.txt")
-generate_category_distribution("./MentalRisk2024/Train/Gold/gold_a.txt")
-generate_classes_per_user_distribution("./MentalRisk2024/Train/Gold/gold_a.txt")
+generar_distribución("./MentalRisk2024/Train/Gold/gold_a.txt")
+generar_clases_por_riesgo("./MentalRisk2024/Train/Gold/gold_a.txt")
 generar_tabla_distribucion_plataformas("./MentalRisk2024/Train/Gold/gold_a.txt","./MentalRisk2024/Train/")
 """
