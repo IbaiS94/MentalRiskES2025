@@ -1,0 +1,174 @@
+ROBERTUITO
+
+Robertuito poca complejidad, mensajes limitados a 128 de longitud, terrible para modelos mas grandes
+pysentimiento/robertuito-sentiment-analysis pasa lo mismo que base-uncased
+LSTM HIBRIDO
+
+BINARY METRICS: =============================   CLARO OVERFITTING, con el lstm primero tambien da mal resultado porque no es nada confiado da mucho en todo, falta complejidad seguramente
+Accuracy:0.5
+Macro precision:0.7395833333333334
+Macro recall:0.537037037037037
+Macro f1:0.39290917921321034
+Micro precision:0.5
+Micro recall:0.5
+Micro f1:0.5
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5665805448427605
+ERDE_30:0.23000030658881102
+Median latency:6.0
+Speed:0.9502910041917618
+
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.6266666666666667
+Macro precision:0.48409598214285715
+Macro recall:0.3515625
+Macro f1:0.34649729561056797
+Micro precision:0.6266666666666667
+Micro recall:0.6266666666666667
+Micro f1:0.6266666666666667
+
+
+BETO fine tunning:
+ignacio-ave/beto-sentiment-analysis-Spanish.
+
+BINARY METRICS: =============================
+Accuracy:0.78
+Macro precision:0.7856071964017991
+Macro recall:0.7726784755770263
+Macro f1:0.7747030176141277
+Micro precision:0.78
+Micro recall:0.78
+Micro f1:0.78
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4800336878239414
+ERDE_30:0.20054591386884957
+Median latency:13.0
+Speed:0.8811641860504984
+latency-weightedF1:0.6522002636909201
+
+
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.5666666666666667
+Macro precision:0.41244172494172493
+Macro recall:0.28125
+Macro f1:0.23675595238095237
+Micro precision:0.5666666666666667
+Micro recall:0.5666666666666667
+Micro f1:0.5666666666666667
+
+
+
+MULTI
+intfloat/multilingual-e5-large
+Aceptable pero un poco meh...
+
+
+BINARY METRICS: =============================
+Accuracy:0.7133333333333334
+Macro precision:0.7616421568627452
+Macro recall:0.7292002147074611
+Macro f1:0.7076023391812865
+Micro precision:0.7133333333333334
+Micro recall:0.7133333333333334
+Micro f1:0.7133333333333334
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5196651053142227
+ERDE_30:0.1641466170346246
+Median latency:9.0
+Speed:0.9205676944426255
+latency-weightedF1:0.6890799116295676
+
+
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.58
+Macro precision:0.5791083916083917
+Macro recall:0.296875
+Macro f1:0.26532738095238095
+Micro precision:0.58
+Micro recall:0.58
+Micro f1:0.58
+
+PRIMERA LSTM     no da un resultado malo para nada
+BINARY METRICS: =============================
+Accuracy:0.78
+Macro precision:0.8226059654631084
+Macro recall:0.7941492216854535
+Macro f1:0.7771374544144793
+Micro precision:0.78
+Micro recall:0.78
+Micro f1:0.78
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4816503585538296
+ERDE_30:0.11667557625646263
+Median latency:9.0
+Speed:0.9205676944426255
+latency-weightedF1:0.7386591081156396
+
+
+
+distilbert sentiment analysis
+
+tabularisai/multilingual-sentiment-analysis
+
+bastante malo en general, nada remarcable ronda 0.5-0.62 en todo
+
+
+
+"hiiamsid/sentence_similarity_spanish_es" 
+
+BINARY METRICS: =============================  usando groupdro con adamw y lstm hibrido
+Accuracy:0.8133333333333334
+Macro precision:0.8146237324319516
+Macro recall:0.8164251207729469
+Macro f1:0.813200498132005
+Micro precision:0.8133333333333334
+Micro recall:0.8133333333333334
+Micro f1:0.8133333333333334
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4607220896885491
+ERDE_30:0.13017612138587462
+Median latency:8.0
+Speed:0.9304624087755833
+latency-weightedF1:0.7520175632569783
+
+
+MULTICLASS METRICS (4 classes): =============================  multi clasico doble lstm
+Accuracy:0.6066666666666667
+Macro precision:0.5060399159663865
+Macro recall:0.328125
+Macro f1:0.31484107290558905
+Micro precision:0.6066666666666667
+Micro recall:0.6066666666666667
+Micro f1:0.6066666666666667
+
+
+
+"nomic-ai/nomic-embed-text-v2-moe" --> posiblemente el peor de todos
+
+BINARY METRICS: =============================
+Accuracy:0.6466666666666666
+Macro precision:0.72953216374269
+Macro recall:0.668545356951154
+Macro f1:0.6286955303348747
+Micro precision:0.6466666666666666
+Micro recall:0.6466666666666666
+Micro f1:0.6466666666666666
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5557515028699316
+ERDE_30:0.18566470317937728
+Median latency:8.0
+Speed:0.9304624087755833
+latency-weightedF1:0.6609842248132559
+
+
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.64
+Macro precision:0.34551495016611294
+Macro recall:0.37191358024691357      wtf no tan malo? que sentido tiene
+Macro f1:0.3414195867026055
+Micro precision:0.64
+Micro recall:0.64
+Micro f1:0.64 
+"""
+
+donde rinde peor el binario rinde mejor el multiclase????????

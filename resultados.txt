@@ -1,0 +1,487 @@
+LONGFORMER allenai/longformer-base-4096
+Test Set Performance (Realistic Evaluation):
+              precision    recall  f1-score   support
+
+           0       0.70      0.58      0.64        12
+           1       0.80      0.87      0.83        23
+
+    accuracy                           0.77        35
+   macro avg       0.75      0.73      0.73        35
+weighted avg       0.77      0.77      0.77        35
+
+Test Set Performance (Realistic Evaluation):
+              precision    recall  f1-score   support
+
+           0       0.67      0.67      0.67        12
+           1       0.83      0.83      0.83        23
+
+    accuracy                           0.77        35
+   macro avg       0.75      0.75      0.75        35
+weighted avg       0.77      0.77      0.77        35
+
+
+JINA jinaai/jina-embeddings-v3
+
+Test Set Performance (Realistic Evaluation):
+              precision    recall  f1-score   support
+
+           0       0.56      0.75      0.64        12
+           1       0.84      0.70      0.76        23
+
+    accuracy                           0.71        35
+   macro avg       0.70      0.72      0.70        35
+weighted avg       0.75      0.71      0.72        35
+
+
+longformer español PlanTL-GOB-ES/longformer-base-4096-bne-es
+
+Test Set Evaluation Results:
+              precision    recall  f1-score   support
+
+           0       0.56      0.75      0.64        12
+           1       0.84      0.70      0.76        23
+
+    accuracy                           0.71        35
+   macro avg       0.70      0.72      0.70        35
+weighted avg       0.75      0.71      0.72        35
+
+Probando a generar muchos datos sintéticos, tengo esperanzas de que ayuden al modelo de análisis de sentimientos a mejorar su predicción negativa para los casos de ludopatía alta, datos generados por ingenio y ntk para sinónimos
+
+
+ZERO-SHOT PROMETE?
+
+
+
+|  | Train | Trial | Total |
+| --- | --- | --- | --- |
+| Baja ludopatia | 4 | 4 | 8 |
+| Alta ludopatía | 3 | 3 | 6 |
+| Total | 7 | 7 | 14 |
+
+
+| Mental Health | betting | onlinegaming | trading | lootboxes | Total |
+| --- | --- | --- | --- | --- | --- |
+| Baja ludopatia | 1 | 1 | 1 | 1 | 4 |
+| Alta ludopatía | 1 | 1 | 1 | 0 | 3 |
+| Total | 2 | 2 | 2 | 1 | 7 |
+
+
+|  | 1 class | 2 classes | 3 classes | 4 classes | Total |
+| --- | --- | --- | --- | --- | --- |
+| Baja ludopatia | 4 | 0 | 0 | 0 | 4 |
+| Alta ludopatía | 3 | 0 | 0 | 0 | 3 |
+| Total | 7 | 0 | 0 | 0 | 7 |
+
+
+Distribución de usuarios por plataforma y nivel de ludopatía:
+| Ludopatía | twitch | telegram | Total |
+| --- | --- | --- | --- |
+| Baja ludopatía | 2 | 2 | 4 |
+| Alta ludopatía | 1 | 2 | 3 |
+| Total | 3 | 4 | 7 |
+
+
+
+Sin entreno:
+
+Usuario: user1002
+Total mensajes: 125
+Mensajes negativos: 45 (36.0%)
+--------------------------------------------------
+Usuario: user133
+Total mensajes: 135
+Mensajes negativos: 33 (24.44%)
+--------------------------------------------------
+Usuario: user15997
+Total mensajes: 24
+Mensajes negativos: 4 (16.67%)
+--------------------------------------------------
+Usuario: user28389
+Total mensajes: 1
+Mensajes negativos: 0 (0.0%)
+--------------------------------------------------
+Usuario: user10263
+Total mensajes: 80
+Mensajes negativos: 15 (18.75%)
+--------------------------------------------------
+Usuario: user7317
+Total mensajes: 71
+Mensajes negativos: 9 (12.68%)
+--------------------------------------------------
+Usuario: user28536
+Total mensajes: 8
+Mensajes negativos: 1 (12.5%)
+--------------------------------------------------
+
+
+Voy a probar a cambiar la ultima capa de la red que ahora es lineal por una relu
+
+Se esta procesando como feedforward?      def forward(self, x):
+        """Propagación hacia adelante a través de la red."""
+        if len(x.shape) == 2:
+            x = x.unsqueeze(1)  # [batch, características] -> [batch, 1, características]
+        
+        salida_lstm, _ = self.lstm(x)
+        x = salida_lstm[:, -1, :]
+        x = self.dropout(x)
+        
+        x = x.unsqueeze(0)  # [batch, características] -> [1, batch, características]
+        salida_lstm2, _ = self.lstm2(x)
+        x = salida_lstm2[0]
+        x = self.relu(x)
+        
+        x = self.fc_dropout(x)
+        salida_final = self.fc(x)
+        
+        return salida_final
+
+
+
+        ===================================================
+EVALUATION:
+BINARY METRICS: =============================
+Accuracy:0.7
+Macro precision:0.6982142857142857
+Macro recall:0.6986044015029522
+Macro f1:0.6983779436078467
+Micro precision:0.7
+Micro recall:0.7
+Micro f1:0.7
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5305330727878846
+ERDE_30:0.21720523311217904
+Median latency:19.0
+Speed:0.8227907298247341
+latency-weightedF1:0.5564196302411871
+{'Acuracy': 0.7, 'Macro_P': 0.6982142857142857, 'Macro_R': 0.6986044015029522, 'Macro_F1': 0.6983779436078467, 'Micro_P': 0.7, 'Micro_R': 0.7, 'Micro_F1': 0.7, 'ERDE5': np.float64(0.5305330727878846), 'ERDE30': np.float64(0.21720523311217904), 'latencyTP': np.float64(19.0), 'speed': np.float64(0.8227907298247341), 'latency-weightedF1': np.float64(0.5564196302411871)}
+
+DESPUES DE ESTE PUNTA EMPIEZA A DECAER, PORQUE EL LIMITE AL SER FIJO MUCHOS LO SOBREPASAN 5
+
+
+
+BINARY METRICS: =============================
+Accuracy:0.6533333333333333
+Macro precision:0.6545098736879559
+Macro recall:0.6553945249597424
+Macro f1:0.6530866393880093
+Micro precision:0.6533333333333333
+Micro recall:0.6533333333333333
+Micro f1:0.6533333333333333
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5471988484700839
+ERDE_30:0.2529812115285658
+Median latency:17.0
+Speed:0.842131459049791
+latency-weightedF1:0.5421942270594545
+
+Metricas finales depues +1 cada 10 rondas
+
+
+##############################
+
+===================================================
+BINARY METRICS: =============================
+Accuracy:0.6533333333333333
+Macro precision:0.6728919071873232
+Macro recall:0.6639828234031133
+Macro f1:0.6511003757380569
+Micro precision:0.6533333333333333
+Micro recall:0.6533333333333333
+Micro f1:0.6533333333333333
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5613335815602415
+ERDE_30:0.22327995480251275
+Median latency:13.0
+Speed:0.8811641860504984
+latency-weightedF1:0.5983213608984866
+
+
+EVALUATION:
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.30666666666666664
+Macro precision:0.5504598662207357
+Macro recall:0.2968942901234568
+Macro f1:0.20801839955393941
+Micro precision:0.30666666666666664
+Micro recall:0.30666666666666664
+Micro f1:0.30666666666666664
+
+
+########################################CON BI PARA BINARIA, LA OTRA NORMAL? NO ENTIENDO PORQUE SACA MEJOR
+
+
+BINARY METRICS: =============================
+Accuracy:0.74
+Macro precision:0.7416666666666667
+Macro recall:0.7334943639291465
+Macro f1:0.7348021215830274
+Micro precision:0.74
+Micro recall:0.74
+Micro f1:0.74
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4969885617678398
+ERDE_30:0.24602725190478392
+Median latency:16.0
+Speed:0.8518484230747749
+latency-weightedF1:0.5943128533079826
+
+
+
+
+
+EVALUATION:
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.62
+Macro precision:0.44326923076923075
+Macro recall:0.39573688271604934
+Macro f1:0.37368338487741476
+Micro precision:0.62
+Micro recall:0.62
+Micro f1:0.62
+
+
+GROUPDRO MAL IMPLMENTADO 
+BINARY METRICS: =============================
+Accuracy:0.6933333333333334
+Macro precision:0.7590132827324478
+Macro recall:0.6709608158883521
+Macro f1:0.655
+Micro precision:0.6933333333333334
+Micro recall:0.6933333333333334
+Micro f1:0.6933333333333334
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4711769562393881
+ERDE_30:0.31186073407580345
+Median latency:18.0
+Speed:0.8324449728031402
+latency-weightedF1:0.44952028531369576
+
+
+CON PROBABILIDAD 4+RONDA//10
+
+BINARY METRICS: =============================
+Accuracy:0.6666666666666666
+Macro precision:0.695195487259288
+Macro recall:0.6795491143317229
+Macro f1:0.6628304261823413
+Micro precision:0.6666666666666666
+Micro recall:0.6666666666666666
+Micro f1:0.6666666666666666
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5722690065226443
+ERDE_30:0.20971868719521625
+Median latency:13.5
+Speed:0.8762653968266441
+latency-weightedF1:0.612330036336691
+
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.58
+Macro precision:0.3504273504273504
+Macro recall:0.33468364197530864
+Macro f1:0.3243434343434344
+Micro precision:0.58
+Micro recall:0.58
+Micro f1:0.58
+
+
+
+
+
+
+
+
+
+
+
+
+MODELO HIBRIDO =====
+
+BINARY METRICS: =============================
+Accuracy:0.7266666666666667
+Macro precision:0.7265395894428153
+Macro recall:0.7211486849168008              Este rarete
+Macro f1:0.7222096752337503
+Micro precision:0.7266666666666667
+Micro recall:0.7266666666666667
+Micro f1:0.7266666666666667
+
+
+
+
+BINARY METRICS: =============================
+Accuracy:0.74
+Macro precision:0.74375
+Macro recall:0.7442297369833601
+Macro f1:0.7399884439308414
+Micro precision:0.74
+Micro recall:0.74
+Micro f1:0.74
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5179021985838018
+ERDE_30:0.18212899546054453
+Median latency:12.0
+Speed:0.8909849607942653
+latency-weightedF1:0.6577741321299945
+
+Accuracy:0.5466666666666666
+Macro precision:0.26182432432432434
+Macro recall:0.2578125
+Macro f1:0.19156177754944773
+Micro precision:0.5466666666666666                                   
+Micro recall:0.5466666666666666
+Micro f1:0.5466666666666666
+
+
+
+
+#deberia ser lo mismo que lo de arriba?
+
+
+BINARY METRICS: =============================
+Accuracy:0.7733333333333333
+Macro precision:0.7719736138349083
+Macro recall:0.7729468599033816
+Macro f1:0.7723214285714286
+Micro precision:0.7733333333333333
+Micro recall:0.7733333333333333
+Micro f1:0.7733333333333333
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5056631616066208
+ERDE_30:0.17899221367833318
+Median latency:14.0
+Speed:0.8713666076027897
+latency-weightedF1:0.6597490028992551
+
+
+EVALUATION:
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.5733333333333334
+Macro precision:0.5740393626991565
+Macro recall:0.36940586419753085
+Macro f1:0.35646525758885306
+Micro precision:0.5733333333333334
+Micro recall:0.5733333333333334
+Micro f1:0.5733333333333334
+
+
+#Con 72 neuronas
+BINARY METRICS: =============================
+Accuracy:0.7533333333333333
+Macro precision:0.7555555555555555
+Macro recall:0.7469135802469136
+Macro f1:0.7484020127838977
+Micro precision:0.7533333333333333
+Micro recall:0.7533333333333333
+Micro f1:0.7533333333333333
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4956951174767884
+ERDE_30:0.21284085030276356
+Median latency:14.5
+Speed:0.8664803418795378
+latency-weightedF1:0.6179549725032362
+
+#con 44 neuronas
+
+BINARY METRICS: =============================
+Accuracy:0.64
+Macro precision:0.7713401149933657
+Macro recall:0.6097691894793343
+Macro f1:0.5598782873288415
+Micro precision:0.64
+Micro recall:0.64
+Micro f1:0.64
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4627371233166222
+ERDE_30:0.35724582527703
+Median latency:17.0
+Speed:0.842131459049791
+latency-weightedF1:0.31335124057666647
+
+CON LSTM PRIMERA, el problema en parte surgirá por el cambio de probabilidades ya no hace 0,9 riesgo, si no que las suma
+
+BINARY METRICS: =============================
+Accuracy:0.5866666666666667
+Macro precision:0.7397563676633444
+Macro recall:0.6162104133118627
+Macro f1:0.5395127748068924
+Micro precision:0.5866666666666667
+Micro recall:0.5866666666666667
+Micro f1:0.5866666666666667
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.5531305602059438
+ERDE_30:0.19375264413330365
+Median latency:7.0
+Speed:0.9403708244228663
+latency-weightedF1:0.6459112733409588
+
+
+
+
+####QUITANDO FUNCION ACTIVACION
+ LEAKY CAPA output
+BINARY METRICS: =============================
+Accuracy:0.7933333333333333
+Macro precision:0.7922008547008547
+Macro recall:0.7936124530327429
+Macro f1:0.7925866452562559
+Micro precision:0.7933333333333333
+Micro recall:0.7933333333333333
+Micro f1:0.7933333333333333
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.49855870379410683
+ERDE_30:0.1739362185102294
+Median latency:12.0
+Speed:0.8909849607942653
+latency-weightedF1:0.6950946502650296
+
+
+
+
+
+
+ignacio beto, aumentando el dropout en capa salida
+
+
+BINARY METRICS: =============================
+Accuracy:0.8
+Macro precision:0.7991368458910268
+Macro recall:0.797638217928073
+Macro f1:0.7982424677187948
+Micro precision:0.8
+Micro recall:0.8
+Micro f1:0.8
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4925543370408752
+ERDE_30:0.1753352713525761
+Median latency:13.0
+Speed:0.8811641860504984
+latency-weightedF1:0.6867897332452414
+
+MULTICLASS METRICS (4 classes): =============================
+Accuracy:0.5666666666666667
+Macro precision:0.41244172494172493
+Macro recall:0.28125
+Macro f1:0.23675595238095237
+Micro precision:0.5666666666666667
+Micro recall:0.5666666666666667
+Micro f1:0.5666666666666667
+
+
+
+
+Nuevo bin en alinai longformer, tener en cuenta que la anterior puede que fuese la mejor para ese modelo
+
+BINARY METRICS: =============================
+Accuracy:0.7466666666666667
+Macro precision:0.7515563101301641
+Macro recall:0.738593666129898
+Macro f1:0.7400109469074987
+Micro precision:0.7466666666666667
+Micro recall:0.7466666666666667
+Micro f1:0.7466666666666667
+LATENCY-BASED METRICS: =============================
+ERDE_5:0.4956627268426639
+ERDE_30:0.24393416150721664
+Median latency:16.5
+Speed:0.846989941062283
+latency-weightedF1:0.5915485302657214
